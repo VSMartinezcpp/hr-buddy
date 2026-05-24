@@ -1,0 +1,392 @@
+{
+  "name": "CLASS3_agente_flujo_1",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"text\"] }}",
+        "options": {
+          "systemMessage": "Eres HR Buddy, asistente virtual de Recursos Humanos de ChocolaTech.\n\nREGLAS GENERALES:\n- Responde siempre en español.\n- Responde únicamente preguntas relacionadas con Recursos Humanos de ChocolaTech.\n- Sé amable, claro y breve.\n- No inventes información.\n- Si no sabes algo, dilo claramente.\n\nAUTENTICACIÓN:\n- El usuario ya fue autenticado automáticamente por n8n usando su Telegram ID.\n- Nunca pidas nombre, apellido, correo, usuario, contraseña ni Telegram ID.\n- Nunca solicites confirmar identidad.\n- Nunca preguntes quién es el usuario.\n\nSEGURIDAD:\n- Nunca reveles información de otros empleados.\n- Solo puedes acceder a la información del empleado autenticado.\n- Si el usuario pide información de otra persona responde:\n\"No puedo compartir información de otros empleados.\"\n\nUSO DE HERRAMIENTAS:\n- Usa la herramienta PostgreSQL únicamente para consultar los datos del usuario autenticado.\n- Nunca busques empleados por nombre.\n- Nunca modifiques datos.\n- Usa únicamente los datos obtenidos desde PostgreSQL.\n\nSI NO HAY REGISTRO:\n- Si no encuentras datos del usuario responde:\n\"No encontré tu registro autorizado en el sistema.\"\n\nEJEMPLOS:\nUsuario: \"¿Cuántos días de vacaciones tengo disponibles?\"\nRespuesta esperada:\n\"Tienes X días de vacaciones disponibles.\"\n\nUsuario: \"¿Cuál es mi puesto?\"\nRespuesta esperada:\n\"Tu puesto actual es X.\"\n\nUsuario: \"¿Cuántos días tiene Juan?\"\nRespuesta esperada:\n\"No puedo compartir información de otros empleados.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        768,
+        320
+      ],
+      "id": "31346b5d-8ba5-4e5d-97db-99af24ed0d6c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatCohere",
+      "typeVersion": 1,
+      "position": [
+        592,
+        576
+      ],
+      "id": "e68f0ccf-dcef-428e-8a7d-894a62d92ec4",
+      "name": "Cohere Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').first().json.message.from.id.toString() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        576
+      ],
+      "id": "34d5bef5-5fba-47ed-8b9f-a995e831024e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Busca información sobre RH",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        576
+      ],
+      "id": "679fd74e-3b33-446b-9a04-4b692ac4c792",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "modelName": "embed-multilingual-v3.0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsCohere",
+      "typeVersion": 1,
+      "position": [
+        928,
+        784
+      ],
+      "id": "395d3438-1d4e-4cd2-b86d-997a0e251b05",
+      "name": "Embeddings Cohere"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        352
+      ],
+      "id": "c7a483f7-2bff-4832-bf54-b21874eb5d18",
+      "name": "Telegram Trigger",
+      "webhookId": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        352
+      ],
+      "id": "72c75e09-03e0-4a6d-901c-d3ea7627b606",
+      "name": "Send a text message",
+      "webhookId": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"text\"].toLowerCase()}}",
+                    "rightValue": "hola|hey|buenos dias|buenas tardes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "50e85a33-3fe6-4969-8ce5-974ccd3ef617"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "abd91e8a-23a9-4552-a0b7-fec050223b3b",
+                    "leftValue": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"text\"].toLowerCase()}}",
+                    "rightValue": "vacaciones|nomina|horario|salario|rh|chocoltec",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        336
+      ],
+      "id": "24a96893-8d3e-44e9-a941-01c0e7b23537",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0b9b52cb-1201-4c0e-9050-8b0db3e06612",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "=exists",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        144,
+        352
+      ],
+      "id": "12b0f661-b129-4b5e-9e6c-5e52a3331778",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM empleados\nWHERE telegram_id = {{$json.message.from.id}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -96,
+        352
+      ],
+      "id": "9263c3cf-a633-4951-8a75-7caaf1440da6",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta únicamente los datos del empleado autenticado por Telegram ID. No acepta nombres ni datos de otros empleados.",
+        "operation": "executeQuery",
+        "query": "SELECT nombre, departamento, puesto, fecha_ingreso, saldo_vacaciones, banco_horas, modalidad\nFROM empleados\nWHERE telegram_id = {{ $('Telegram Trigger').item.json.message.from.id }}\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1136,
+        576
+      ],
+      "id": "761cca6b-2608-44f3-80e9-f7bd6c20936c",
+      "name": "Execute a SQL query in Postgres"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cohere Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Cohere": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query in Postgres": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "567e01b5-7809-46fe-a9b5-5f22bbff9ac3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REMOVED_FOR_SECURITY"
+  },
+  "id": "h3TgGAYaZgV6ptbH",
+  "tags": []
+}
